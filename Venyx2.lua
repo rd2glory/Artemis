@@ -222,7 +222,7 @@ do
 	function library.new(title)
 		local container = utility:Create("ScreenGui", {
 			Name = title,
-			Parent = player.PlayerGui--game.CoreGui
+			Parent = game:GetService("CoreGui")
 		}, {
 			utility:Create("ImageLabel", {
 				Name = "Main",
