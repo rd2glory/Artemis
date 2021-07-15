@@ -1,3 +1,11 @@
+--[[
+
+	mostly made by @RealLuzu
+	credits to them:
+	Luzu#0001
+
+]]--
+
 -- init
 local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
@@ -214,7 +222,7 @@ do
 	function library.new(title)
 		local container = utility:Create("ScreenGui", {
 			Name = title,
-			Parent = game:GetService("CoreGui"),
+			Parent = player.PlayerGui--game.CoreGui
 		}, {
 			utility:Create("ImageLabel", {
 				Name = "Main",
@@ -864,6 +872,8 @@ do
 				db = false
 			end
 		end)
+		
+		self.Body = textLabel
 		
 		table.insert(self.modules, body)
 
