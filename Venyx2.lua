@@ -214,7 +214,7 @@ do
 	function library.new(title)
 		local container = utility:Create("ScreenGui", {
 			Name = title,
-			Parent = game.CoreGui
+			Parent = game:GetService("CoreGui"),
 		}, {
 			utility:Create("ImageLabel", {
 				Name = "Main",
@@ -810,6 +810,64 @@ do
 		end)
 
 		return toggle
+	end
+	
+	function section:addBody(text)
+		local ySize = 30 -- pixels
+		local body = utility:Create("ImageButton", {
+			Name = "Textbox",
+			Parent = self.container,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Size = UDim2.new(1, 0, 0, ySize),
+			ZIndex = 2,
+			Image = "rbxassetid://5028857472",
+			ImageColor3 = themes.DarkContrast,
+			ScaleType = Enum.ScaleType.Slice,
+			SliceCenter = Rect.new(2, 2, 298, 298),
+		},{
+			utility:Create("TextLabel", {
+				Name = "Body",
+				AnchorPoint = Vector2.new(0, 0.5),
+				BackgroundTransparency = 1,
+				Position = UDim2.new(0, 10, 0.5, 1),
+				Size = UDim2.new(1, -20, 1, 0),
+				ZIndex = 3,
+				Font = Enum.Font.Gotham,
+				Text = text,
+				TextColor3 = themes.TextColor,
+				TextSize = 12,
+				TextTransparency = 0.1,
+				TextWrapped = true,
+				RichText = true,
+				TextXAlignment = Enum.TextXAlignment.Left,
+			})
+		})
+		
+		local textLabel = body.Body
+		
+		local db = false
+		
+		self._textUpdate = run.Heartbeat:Connect(function()
+			if not db then
+				db = true
+				
+				local index = 1
+				while not textLabel.TextFits do
+					body.Size = UDim2.new(1, -20, 0, ySize*(index+1))
+					index += 1
+					run.Heartbeat:Wait()
+				end
+				
+				run.Heartbeat:Wait()
+				
+				db = false
+			end
+		end)
+		
+		table.insert(self.modules, body)
+
+		return body
 	end
 
 	function section:addTextbox(title, default, callback)
