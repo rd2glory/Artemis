@@ -1768,7 +1768,7 @@ do
 		return slider
 	end
 
-	function section:addDropdown(title, list, callback)
+	function section:addDropdown(title, list, default, callback)
 		local dropdown = utility:Create("Frame", {
 			Name = "Dropdown",
 			Parent = self.container,
@@ -1800,7 +1800,7 @@ do
 					Size = UDim2.new(1, -42, 1, 0),
 					ZIndex = 3,
 					Font = Enum.Font.Gotham,
-					Text = title,
+					Text = "Loading...",
 					TextColor3 = themes.TextColor,
 					TextSize = 12,
 					TextTransparency = 0.10000000149012,
@@ -1857,6 +1857,8 @@ do
 		local focused
 
 		list = list or {}
+		
+		self.title = title
 
 		search.Button.MouseButton1Click:Connect(function()
 			if search.Button.Rotation == 0 then
@@ -1890,6 +1892,10 @@ do
 		dropdown:GetPropertyChangedSignal("Size"):Connect(function()
 			self:Resize()
 		end)
+		
+		if default then
+			self:updateDropdown(self:getModule(dropdown), list[default], nil, callback)
+		end
 
 		return dropdown
 	end
@@ -2181,7 +2187,7 @@ do
 		dropdown = self:getModule(dropdown)
 
 		if title then
-			dropdown.Search.TextBox.Text = title
+			dropdown.Search.TextBox.Text = self.title..": "..title
 		end
 
 		local entries = 0
