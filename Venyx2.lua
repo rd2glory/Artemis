@@ -1894,7 +1894,14 @@ do
 		end)
 		
 		if default then
-			self:updateDropdown(self:getModule(dropdown), list[default], nil, callback)
+			local option = list[default]
+			
+			local moduleDropdown = self:getModule(dropdown)
+			
+			self:updateDropdown(moduleDropdown, option, nil, callback)
+			callback(option, function(...)
+				self:updateDropdown(moduleDropdown, ...)
+			end)
 		end
 
 		return dropdown
