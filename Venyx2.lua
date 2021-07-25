@@ -12,6 +12,7 @@ local mouse = player:GetMouse()
 
 -- services
 local input = game:GetService("UserInputService")
+local uis = game:GetService("UserInputService") -- declared twice because 1st one has naming inconsistencies throughout lib
 local run = game:GetService("RunService")
 local tween = game:GetService("TweenService")
 local tweeninfo = TweenInfo.new
@@ -27,7 +28,8 @@ local themes = {
 	Accent = Color3.fromRGB(10, 10, 10), 
 	LightContrast = Color3.fromRGB(20, 20, 20), 
 	DarkContrast = Color3.fromRGB(14, 14, 14),  
-	TextColor = Color3.fromRGB(255, 255, 255)
+	TextColor = Color3.fromRGB(255, 255, 255),
+	TextColor2 = Color3.fromRGB(200,200,200),
 }
 
 do
@@ -668,19 +670,19 @@ do
 
 		-- added by iamtryingtofindname, 7/15/21
 		length = length or 2
-		
+
 		local start = os.clock()
-		
+
 		if length > 0 then
 			local event = nil
 			event = run.Heartbeat:Connect(function()
 				local now = os.clock()
 
 				local dif = now-start
-				
+
 				if dif >= length and event then
 					event:Disconnect()
-					
+
 					close()
 				end
 			end)
@@ -819,7 +821,7 @@ do
 
 		return toggle
 	end
-	
+
 	function section:addBody(text)
 		local ySize = 30 -- pixels
 		local body = utility:Create("ImageButton", {
@@ -851,30 +853,30 @@ do
 				TextXAlignment = Enum.TextXAlignment.Left,
 			})
 		})
-		
+
 		local textLabel = body.Body
-		
+
 		local db = false
-		
+
 		self._textUpdate = run.Heartbeat:Connect(function()
 			if not db then
 				db = true
-				
+
 				local index = 1
 				while not textLabel.TextFits do
 					body.Size = UDim2.new(1, -20, 0, ySize*(index+1))
 					index += 1
 					run.Heartbeat:Wait()
 				end
-				
+
 				run.Heartbeat:Wait()
-				
+
 				db = false
 			end
 		end)
-		
+
 		self.Body = textLabel
-		
+
 		table.insert(self.modules, body)
 
 		return body
@@ -984,6 +986,123 @@ do
 				end)
 			end
 		end)
+
+		return textbox
+	end
+
+	function section:addSuggestionBox(title, default, callback, fill)
+		local textbox = utility:Create("ImageButton", {
+			Name = "Textbox",
+			Parent = self.container,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Size = UDim2.new(1, 0, 0, 30),
+			ZIndex = 2,
+			Image = "rbxassetid://5028857472",
+			ImageColor3 = themes.DarkContrast,
+			ScaleType = Enum.ScaleType.Slice,
+			SliceCenter = Rect.new(2, 2, 298, 298)
+		}, {
+			utility:Create("TextLabel", {
+				Name = "Title",
+				AnchorPoint = Vector2.new(0, 0.5),
+				BackgroundTransparency = 1,
+				Position = UDim2.new(0, 10, 0.5, 1),
+				Size = UDim2.new(0.5, 0, 1, 0),
+				ZIndex = 3,
+				Font = Enum.Font.Gotham,
+				Text = title,
+				TextColor3 = themes.TextColor,
+				TextSize = 12,
+				TextTransparency = 0.10000000149012,
+				TextXAlignment = Enum.TextXAlignment.Left
+			}),
+			utility:Create("ImageLabel", {
+				Name = "Button",
+				BackgroundTransparency = 1,
+				Position = UDim2.new(1, -110, 0.5, -8),
+				Size = UDim2.new(0, 100, 0, 16),
+				ZIndex = 2,
+				Image = "rbxassetid://5028857472",
+				ImageColor3 = themes.LightContrast,
+				ScaleType = Enum.ScaleType.Slice,
+				SliceCenter = Rect.new(2, 2, 298, 298)
+			}, {
+				utility:Create("TextBox", {
+					Name = "Textbox", 
+					BackgroundTransparency = 1,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					Position = UDim2.new(0, 5, 0, 0),
+					Size = UDim2.new(1, -10, 1, 0),
+					ZIndex = 3,
+					Font = Enum.Font.GothamSemibold,
+					Text = default or "",
+					TextColor3 = themes.TextColor,
+					TextSize = 11
+				})
+			})
+		})
+
+		table.insert(self.modules, textbox)
+		--self:Resize()
+
+		local button = textbox.Button
+		local input = button.Textbox
+
+		textbox.MouseButton1Click:Connect(function()
+
+			if textbox.Button.Size ~= UDim2.new(0, 100, 0, 16) then
+				return
+			end
+
+			utility:Tween(textbox.Button, {
+				Size = UDim2.new(0, 200, 0, 16),
+				Position = UDim2.new(1, -210, 0.5, -8)
+			}, 0.2)
+
+			wait()
+
+			input.TextXAlignment = Enum.TextXAlignment.Left
+			input:CaptureFocus()
+		end)
+
+		input:GetPropertyChangedSignal("Text"):Connect(function()
+
+			if button.ImageTransparency == 0 and (button.Size == UDim2.new(0, 200, 0, 16) or button.Size == UDim2.new(0, 100, 0, 16)) then -- i know, i dont like this either
+				utility:Pop(button, 10)
+			end
+
+			if callback then
+				callback(input.Text, nil, function(...)
+					self:updateTextbox(textbox, ...)
+				end)
+			end
+		end)
+		
+		input.FocusLost:Connect(function()
+
+			input.TextXAlignment = Enum.TextXAlignment.Center
+
+			utility:Tween(textbox.Button, {
+				Size = UDim2.new(0, 100, 0, 16),
+				Position = UDim2.new(1, -110, 0.5, -8)
+			}, 0.2)
+
+			if callback then
+				callback(input.Text, true, function(...)
+					self:updateTextbox(textbox, ...)
+				end)
+			end
+		end)
+		
+		if fill then
+			uis.InputBegan:Connect(function(inp)
+				if input:IsFocused() and inp.UserInputType == Enum.UserInputType.Keyboard and inp.KeyCode == Enum.KeyCode.Tab then\
+					local old = input.Text
+					input.Text = fill(old) or old
+				end
+			end)
+		end
 
 		return textbox
 	end
@@ -1857,7 +1976,7 @@ do
 		local focused
 
 		list = list or {}
-		
+
 		self.title = title
 
 		search.Button.MouseButton1Click:Connect(function()
@@ -1892,12 +2011,12 @@ do
 		dropdown:GetPropertyChangedSignal("Size"):Connect(function()
 			self:Resize()
 		end)
-		
+
 		if default then
 			local option = list[default]
-			
+
 			local moduleDropdown = self:getModule(dropdown)
-			
+
 			self:updateDropdown(moduleDropdown, option, nil, callback)
 			callback(option, function(...)
 				self:updateDropdown(moduleDropdown, ...)
