@@ -1100,6 +1100,12 @@ do
 				if input:IsFocused() and inp.UserInputType == Enum.UserInputType.Keyboard and inp.KeyCode == Enum.KeyCode.Tab then
 					local old = input.Text
 					input.Text = fill(old) or old
+					input:GetPropertyChangedSignal("Text"):Wait()
+					input.Text = input.Text:gsub("\t","")
+					local oldPos = input.CursorPosition
+					if oldPos ~= -1 then
+						input.CursorPosition = oldPos-1
+					end
 				end
 			end)
 		end
