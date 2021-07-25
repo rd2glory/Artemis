@@ -224,7 +224,7 @@ do
 	function library.new(title)
 		local container = utility:Create("ScreenGui", {
 			Name = title,
-			Parent = game.CoreGui
+			Parent = game:GetService("CoreGui") -- change this when pasting from studio to git or else you get banned lol
 		}, {
 			utility:Create("ImageLabel", {
 				Name = "Main",
@@ -1078,7 +1078,7 @@ do
 				end)
 			end
 		end)
-		
+
 		input.FocusLost:Connect(function()
 
 			input.TextXAlignment = Enum.TextXAlignment.Center
@@ -1094,10 +1094,10 @@ do
 				end)
 			end
 		end)
-		
+
 		if fill then
 			uis.InputBegan:Connect(function(inp)
-				if input:IsFocused() and inp.UserInputType == Enum.UserInputType.Keyboard and inp.KeyCode == Enum.KeyCode.Tab then\
+				if input:IsFocused() and inp.UserInputType == Enum.UserInputType.Keyboard and inp.KeyCode == Enum.KeyCode.Tab then
 					local old = input.Text
 					input.Text = fill(old) or old
 				end
