@@ -224,7 +224,7 @@ do
 	function library.new(title)
 		local container = utility:Create("ScreenGui", {
 			Name = title,
-			Parent = game:GetService("CoreGui") -- change this when pasting from studio to git or else you get banned lol
+			Parent = player:WaitForChild("PlayerGui") -- game:GetService("CoreGui") -- change this when pasting from studio to git or else you get banned lol
 		}, {
 			utility:Create("ImageLabel", {
 				Name = "Main",
@@ -1102,7 +1102,8 @@ do
 					input.Text = fill(old) or old
 					input:GetPropertyChangedSignal("Text"):Wait()
 					input.Text = input.Text:gsub("\t","")
-					input.CursorPosition = -1--#input.Text+1
+					input:ReleaseFocus()
+					--input.CursorPosition = #input.Text+1 -- removed in favor of :ReleaseFocus() call
 				end
 			end)
 		end
