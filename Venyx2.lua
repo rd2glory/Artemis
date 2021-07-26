@@ -1102,7 +1102,7 @@ do
 					input.Text = fill(old) or old
 					input:GetPropertyChangedSignal("Text"):Wait()
 					input.Text = input.Text:gsub("\t","")
-					input.CursorPosition = #input.Text+1
+					input.CursorPosition = -1--#input.Text+1
 				end
 			end)
 		end
