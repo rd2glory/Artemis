@@ -851,6 +851,7 @@ do
 				TextWrapped = true,
 				RichText = true,
 				TextXAlignment = Enum.TextXAlignment.Left,
+				TextYAlignment = Enum.TextYAlignment.Center,
 			})
 		})
 
