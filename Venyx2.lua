@@ -823,13 +823,13 @@ do
 	end
 
 	function section:addBody(text)
-		local ySize = 10 -- pixels
+		local ySize = 15 -- pixels
 		local body = utility:Create("ImageButton", {
 			Name = "Textbox",
 			Parent = self.container,
 			BackgroundTransparency = 1,
 			BorderSizePixel = 0,
-			Size = UDim2.new(1, 0, 0, ySize),
+			Size = UDim2.new(1, 0, 1, 0),
 			ZIndex = 2,
 			Image = "rbxassetid://5028857472",
 			ImageColor3 = themes.DarkContrast,
@@ -858,7 +858,8 @@ do
 		local textLabel = body.Body
 
 		local db = false
-
+		
+		--[[
 		self._textUpdate = run.Heartbeat:Connect(function()
 			if not db then
 				db = true
@@ -875,6 +876,7 @@ do
 				db = false
 			end
 		end)
+		]]--
 
 		self.Body = textLabel
 
