@@ -224,7 +224,7 @@ do
 	function library.new(title)
 		local container = utility:Create("ScreenGui", {
 			Name = title,
-			Parent = player:WaitForChild("PlayerGui") -- game:GetService("CoreGui") -- change this when pasting from studio to git or else you get banned lol
+			Parent = game:GetService("CoreGui") -- change this when pasting from studio to git or else you get banned lol
 		}, {
 			utility:Create("ImageLabel", {
 				Name = "Main",
