@@ -823,7 +823,7 @@ do
 	end
 
 	function section:addBody(text)
-		local ySize = 30 -- pixels
+		local ySize = 10 -- pixels
 		local body = utility:Create("ImageButton", {
 			Name = "Textbox",
 			Parent = self.container,
