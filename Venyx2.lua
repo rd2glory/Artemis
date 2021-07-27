@@ -859,10 +859,7 @@ do
 
 		local db = false
 
-		self._textUpdate = run.Heartbeat:Connect(function()
-			body.AnchorPoint = Vector2.new(0.5,0.5)
-			body.Position = UDim2.fromScale(0.5,0.5)
-			
+		self._textUpdate = run.Heartbeat:Connect(function()			
 			if not db then
 				db = true
 
