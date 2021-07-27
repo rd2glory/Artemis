@@ -867,6 +867,7 @@ do
 				while not textLabel.TextFits do
 					body.Size = UDim2.new(1, -20, 0, ySize*(index+1))
 					index += 1
+					run.Heartbeat:Wait()
 				end
 
 				run.Heartbeat:Wait()
