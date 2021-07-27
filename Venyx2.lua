@@ -823,7 +823,7 @@ do
 	end
 
 	function section:addBody(text)
-		local ySize = 2 -- pixels
+		local ySize = 15 -- pixels
 		local body = utility:Create("ImageButton", {
 			Name = "Textbox",
 			Parent = self.container,
@@ -860,6 +860,9 @@ do
 		local db = false
 
 		self._textUpdate = run.Heartbeat:Connect(function()
+			body.AnchorPoint = Vector2.new(0.5,0.5)
+			body.Position = UDim2.fromScale(0.5,0.5)
+			
 			if not db then
 				db = true
 
