@@ -34,6 +34,9 @@ local FixedCamera = false
 local FlyEnabled = false
 
 local FreeFistsEnabled = false
+local AimlockEnabled = false
+
+local LowerGFX = false
 
 local DoSessionSaving = true
 
@@ -45,7 +48,10 @@ local CurrentRobbingStart = 0
 local mouse = player:GetMouse()
 
 local cashiers = Workspace:WaitForChild("Cashiers")
-local drops = Workspace:WaitForChild("Ignored"):WaitForChild("Drop")
+local ignored = Workspace:WaitForChild("Ignored")
+
+local drops = ignored:WaitForChild("Drop")
+local Shop = ignored:WaitForChild("Shop")
 
 local AfkSpots = {
 	["Lava Base"] = CFrame.new(-798.5,-39.425,-843.75);
@@ -101,6 +107,7 @@ local DefaultConfigs = {
 	["HoldWallet"] = HoldWallet;
 	["FixedCamera"] = FixedCamera;
 	["SelectedAFKSpot"] = SelectedAFKSpot;
+	["LowerGFX"] = LowerGFX;
 }
 
 do
@@ -125,7 +132,7 @@ do
 			
 			count = count+1
 			
-			HB:Wait()
+			task.wait()
 		end
 
 		return
@@ -152,7 +159,7 @@ do
 			
 			count = count+1
 
-			HB:Wait()
+			task.wait()
 		end
 
 		return
@@ -204,6 +211,7 @@ do
 					HoldWallet = formatted["HoldWallet"]
 					FixedCamera = formatted["FixedCamera"]
 					SelectedAFKSpot = formatted["SelectedAFKSpot"]
+					LowerGFX = formatted["LowerGFX"];
 				end
 			end
 		else
@@ -359,6 +367,7 @@ do -- Save Loop
 				["HoldWallet"] = HoldWallet;
 				["FixedCamera"] = FixedCamera;
 				["SelectedAFKSpot"] = SelectedAFKSpot;
+				["LowerGFX"] = LowerGFX;
 			}
 			
 			local encoded = encode(newConfigs)
@@ -510,12 +519,14 @@ local AutoRob = Money:addSection("Auto Rob (BETA)")
 local Movement = Player:addSection("Movement")
 
 local Character = Combat:addSection("Character")
+local Aimlock = Combat:addSection("Aimlock")
 
 local AutoRobStats = Statistics:addSection("AutoRob")
 
 local TeleportToPlayer = TeleportsPage:addSection("Teleport To Player")
 local Teleports = TeleportsPage:addSection("Teleports")
 
+local GameSettings = Settings:addSection("Game")
 local SessionSaving = Settings:addSection("Session Saving")
 local Keybinds = Settings:addSection("Keybinds")
 
@@ -534,8 +545,6 @@ local EnableAutoRob = AutoRob:addToggle("Enabled",AutoRobEnabled,function(newVal
 
 		SecondsSpentRobbing = SecondsSpentRobbing+timeSpent
 	end
-
-	log("Auto Rob Enabled State Changed: "..tostring(newValue))
 
 	for i,v in pairs(cashiers:GetDescendants()) do
 		if v:IsA("BasePart") then
@@ -629,7 +638,7 @@ end,function(text)
 	return fill(text,getPlayerNames())
 end)
 
-local TeleportPlayerButton = TeleportToPlayer:addButton("Teleport",function()
+local TeleportPlayearButton = TeleportToPlayer:addButton("Teleport",function()
 	if SelectedTeleportPlayer and SelectedTeleportPlayer.Character then		
 		local targetChar = mobileCharacter(SelectedTeleportPlayer.Character)
 
@@ -645,6 +654,48 @@ end)
 local FreeFistsToggle = Character:addToggle("Free Fists (R)",FreeFistsEnabled,function(newValue)
 	FreeFistsEnabled = newValue
 end)
+
+local AimlockToggle = Aimlock:addToggle("Aimlock (Z)",AimlockEnabled,function(newValue)
+	AimlockEnabled = newValue
+end)
+
+-- Game Settings
+local Hidden = Instance.new("Folder")
+Hidden.Name = "Hidden"
+
+local hiddenItems = {}
+local hiddenItemData = {} -- holds materials and old parents
+
+local function updateGFX(setting)
+	if setting == true then
+		for i,v in pairs(workspace:GetDescendants()) do
+			if v:IsA("Texture") or v:IsA("SurfaceAppearance") then
+				table.insert(hiddenItems,v)
+				hiddenItemData[v] = v.Parent
+				v.Parent = Hidden
+			elseif v:IsA("BasePart") and v.Material ~= Enum.Material.Glass and v.Material ~= Enum.Material.ForceField then
+				table.insert(hiddenItems,v)
+				hiddenItemData[v] = v.Material
+				v.Material = Enum.Material.SmoothPlastic
+			end
+		end
+	elseif setting == false then
+		for i,v in pairs(hiddenItems) do
+			local data = hiddenItemData[v]
+
+			if typeof(data) == "EnumItem" then
+				v.Material = data
+			else
+				v.Parent = data
+			end
+		end
+
+		hiddenItems = {}
+		hiddenItemData = {}
+	end
+end
+
+local LowerGFXToggle = GameSettings:addToggle("Lower GFX",LowerGFX,updateGFX)
 
 -- SessionSaving
 local ToggleSessionSaving = SessionSaving:addToggle("Session Saving Enabled",DoSessionSaving,function(newValue)
@@ -679,7 +730,7 @@ local ClearAllDataButton = SessionSaving:addButton("Clear All Data",function()
 
 	Artemis:Notify("All Session Data Removed","This action cannot be undone",nil,notifLength)
 
-	wait(5)
+	task.wait(5)
 
 	AllNotifsOverride = false
 end)
@@ -754,6 +805,9 @@ do
 		"High School (1)";
 		"High School (2)";
 	}
+	
+	-- Items
+	local key = Shop:FindFirstChild("[Key] - $125")
 
 	-- Functions
 
@@ -982,8 +1036,6 @@ do
 					Camera.CFrame = CamGoal
 				elseif not FixedCamera then
 					Camera.CameraType = Enum.CameraType.Custom
-				else
-					error("CRITICAL ERROR: No valid camera state found")
 				end
 			end
 
@@ -1018,13 +1070,15 @@ do
 		local db = false
 		local mainLoop = HB:Connect(function()
 			if not AutoRobEnabled then
-				wait(0.1)
+				task.wait(0.1)
 				db = false
 			end
 			
 			if db then return else db = true end
 			
 			pcall(function()
+				if not player:FindFirstChild("DataFolder") then return end
+				
 				local character = mobileCharacter()
 
 				local function updateCharacterVar()
@@ -1032,7 +1086,35 @@ do
 				end		
 
 				if AutoRobEnabled and character then
-
+					-- Check if they are arrested or banned
+					local jail = player.DataFolder.Information:FindFirstChild("Jail")
+					
+					
+					if jail then
+						local jailTime = tonumber(jail.Value)
+						
+						if jailTime > 50000000 then
+							-- Assume they are banned
+							return
+						elseif jailTime > 0 then
+							-- Unjail them!
+							character.PrimaryPart.CFrame = key.Head.CFrame + Vector3.new(0,1,0) -- Teleport them a bit above it because why not
+							task.wait(0.25)
+							-- Purchase it
+							fireclickdetector(key:FindFirstChildOfClass("ClickDetector"))
+							task.wait(0.75)
+							local key = player.Backpack:FindFirstChild("[Key]")
+							
+							if key then
+								task.wait(0.5)
+								key.Parent = character
+							else
+								error("No key found after purchasing!")
+							end
+						end
+						
+					end
+					
 					local register = getRegister()
 
 					if register then
@@ -1077,7 +1159,7 @@ do
 									updateCharacterVar()
 
 									while not character do
-										HB:Wait()
+										task.wait()
 										updateCharacterVar()
 									end
 
@@ -1105,7 +1187,7 @@ do
 									end
 								else
 									resetTimeVars()
-									HB:Wait()
+									task.wait()
 								end
 							end)
 
@@ -1115,7 +1197,7 @@ do
 								return
 							end
 						end)
-
+						
 						repeatSub.Event:Wait()
 
 						-- Collect the cash
@@ -1195,11 +1277,11 @@ do
 												if not AutoRobEnabled or (v.Parent.Position - root.Position).Magnitude >= 18 then
 													return
 												end
-												wait(pickupCooldown)
+												task.wait(pickupCooldown)
 
 												if v then
 													fireclickdetector(v)
-													HB:Wait()
+													task.wait()
 												end
 
 												if not v or not v.Parent or not v.Parent.Parent or (v.Parent.Position - root.Position).Magnitude > 18 then
@@ -1234,7 +1316,7 @@ do
 							end)
 							temp.Event:Wait()
 							temp:Destroy()
-							wait(1.5)
+							task.wait(1.5)
 						end
 					else
 						--TODO: Afk spot code
@@ -1360,7 +1442,7 @@ do
 		end)
 
 		b.Event:Wait()
-		HB:Wait()
+		task.wait()
 
 		if gyro then
 			gyro:Destroy()
@@ -1566,4 +1648,121 @@ do
 			end)
 		end
 	end
+end
+
+do -- Aimlock
+	local key = "Z"
+	
+	local target = nil
+	local holding = false
+	
+	UIS.InputBegan:Connect(function(input,gpe)
+		if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode[key] and not gpe then
+			if not holding then
+				local me = mobileCharacter()
+				
+				if me then
+					local mr = me.PrimaryPart
+					
+					local selected = nil
+					
+					local params = RaycastParams.new()
+					local filter = {}
+					
+					for i,v in pairs(Players:GetPlayers()) do
+						if v ~= player and mobileCharacter(v.Character) then
+							table.insert(filter,v.Character)
+						end
+					end
+					
+					params.FilterDescendantsInstances = filter
+					params.FilterType = Enum.RaycastFilterType.Whitelist
+					params.IgnoreWater = false
+					
+					local mousePos = UIS:GetMouseLocation()
+					
+					local unitRay = Camera:ScreenPointToRay(mousePos.X,mousePos.Y)
+					
+					local ray = workspace:Raycast(unitRay.Origin,unitRay.Direction*100,params)
+					
+					if ray then
+						selected = Players:GetPlayerFromCharacter(ray.Instance:FindFirstAncestorOfClass("Model"))
+						
+						target = selected
+						holding = true
+					end
+					
+					if not selected then
+
+						local closest = nil
+						local dist = math.huge
+
+						for i,v in pairs(Players:GetPlayers()) do
+							if v ~= player then
+								local c = v.Character
+
+								if mobileCharacter(c) then
+									local r = c.PrimaryPart
+
+									local _,onScreen = Camera:WorldToScreenPoint(r.Position)
+
+									if onScreen then
+										local distance = (r.Position-mr.Position).Magnitude
+
+										if distance < dist then
+											dist = distance
+											closest = v
+										end
+									end
+								end
+							end
+						end
+						
+						if closest then
+							target = closest
+							holding = true
+						end
+					end
+				end
+			else
+				holding = false
+			end
+		end
+	end)
+	
+	local guess = 2
+	local alpha = 0.8
+	
+	local update = HB:Connect(function()
+		if AimlockEnabled then
+			if holding then
+				local them = target.Character
+				
+				if them then
+					them = mobileCharacter(them)
+					
+					if them then
+						local root = them.PrimaryPart
+						local humanoid = them:FindFirstChildOfClass("Humanoid")
+						local goal = root.CFrame + (humanoid.MoveDirection*guess) + (root.Velocity/50)*guess
+						
+						local zoom = (Camera.CFrame.Position-Camera.Focus.Position).Magnitude
+						local point,onScreen = Camera:WorldToScreenPoint(goal.Position)
+
+						if math.abs(zoom-0.5) <= 0.1 or not onScreen then -- in first person							
+							Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.Focus.Position,goal.Position),alpha)
+						else
+							mousemoveabs(point.X,point.Y)
+						end
+						
+						return
+					end
+				end
+				-- If code reaches this point then one of the if statements failed
+				holding = false
+			end
+		else
+			holding = false
+		end
+	end)
 end
