@@ -340,7 +340,6 @@ do
 		local logInfo = {
 			["Date"] = os.date("%x");
 			["Time"] = os.date("%X");
-			["Formatted Time"] = "TO DO";
 			["Beta"] = beta;
 		}
 
