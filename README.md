@@ -1,8 +1,16 @@
-## Welcome to GitHub Pages
+## Welcome to Scripts8
 
-You can use the [editor on GitHub](https://github.com/iamtryingtofindname/Artemis/edit/main/README.md) to maintain and preview the content for your website in Markdown files.
+Scripts7 is a collection of scripts made by iamtryingtofindname for ROBLOX that bring functionality and usability to a new level. Scripts are made for private use.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+<details>
+  <summary>Artemis</summary>
+  
+  ## Heading
+  1. A numbered
+  2. list
+     * With some
+     * Sub bullets
+</details>
 
 ### Markdown
 
