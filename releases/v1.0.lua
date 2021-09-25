@@ -15,8 +15,8 @@ The best Da Hood script there is.
 ]]--
 
 -- Identifier Configurations
-local VERSION = "1.0"
-local BETA = false
+local VERSION = "6.0"
+local BETA = true
 
 -- Actual Code
 if not game:IsLoaded() then
@@ -1890,7 +1890,7 @@ do -- Aimlock
 	local holding = false
 	
 	UIS.InputBegan:Connect(function(input,gpe)
-		if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode[key] and not gpe then
+		if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode[key] and not gpe and #Players:GetPlayers() > 0 then
 			if not holding then
 				local me = mobileCharacter()
 				
