@@ -15,8 +15,8 @@ The best Da Hood script there is.
 ]]--
 
 -- Identifier Configurations
-local VERSION = "1.0"
-local BETA = false
+local VERSION = "6.0"
+local BETA = true
 
 -- Actual Code
 if not game:IsLoaded() then
@@ -115,6 +115,7 @@ local fileSeperator = "/"
 local extension = ".txt"
 
 local configPath = mainFolderPath..fileSeperator.."Configuations"..extension
+local metaDataPath = mainFolderPath..fileSeperator.."MetaData"..extension
 
 local sessionDataFolderPath = mainFolderPath..fileSeperator.."SessionData"
 
@@ -144,6 +145,10 @@ local DefaultConfigs = {
 	["LowerGFX"] = LowerGFX;
 }
 
+local defaultMetaData = {
+	["LegacyLogVersion"] = false;
+}
+
 do
 	function decode(str)
 		local function try()
@@ -153,34 +158,7 @@ do
 		end
 
 		local success = false
-		
-		local count = 1
 
-		while not success and count <= 6 do			
-			local s,r = try()
-
-			if s then
-				success = true
-				return r
-			end
-			
-			count = count+1
-			
-			task.wait()
-		end
-
-		return
-	end
-	
-	function encode(tbl)
-		local function try()
-			return pcall(function()
-				return HttpService:JSONEncode(tbl)
-			end)
-		end
-
-		local success = false
-		
 		local count = 1
 
 		while not success and count <= 6 do
@@ -190,7 +168,7 @@ do
 				success = true
 				return r
 			end
-			
+
 			count = count+1
 
 			task.wait()
@@ -198,23 +176,50 @@ do
 
 		return
 	end
-	
+
+	function encode(tbl)
+		local function try()
+			return pcall(function()
+				return HttpService:JSONEncode(tbl)
+			end)
+		end
+
+		local success = false
+
+		local count = 1
+
+		while not success and count <= 6 do
+			local s,r = try()
+
+			if s then
+				success = true
+				return r
+			end
+
+			count = count+1
+
+			task.wait()
+		end
+
+		return
+	end
+
 	function format(data,template)
 		local final = {}
 
 		for i,v in pairs(template) do
 			local setValue = data[i]
-			
+
 			if setValue == nil then
 				setValue = template[i]
 			end
-			
+
 			final[i] = setValue
 		end
 
 		return final
 	end
-	
+
 	-- File Saving (Session Saving)
 	function LoadFiles() -- looks through all files to make sure that every file is correct (not edited) and fills in any missing/corrupted required files
 		-- Makes a main folder if it doesn't exist
@@ -226,11 +231,11 @@ do
 		if not isfolder(sessionDataFolderPath) then
 			makefolder(sessionDataFolderPath)
 		end
-		
+
 		if not isfolder(logPath) then
 			makefolder(logPath)
 		end
-		
+
 		-- Config Loading
 		if isfile(configPath) then
 			local decoded = decode(readfile(configPath))
@@ -240,7 +245,7 @@ do
 
 				if formatted then
 					local encoded = encode(formatted)
-					
+
 					if encoded then
 						writefile(configPath,encoded)
 					end
@@ -254,14 +259,53 @@ do
 			end
 		else
 			local encoded = encode(DefaultConfigs)
-			
+
 			writefile(configPath,encoded or "Unable to decode")
+		end
+
+		-- Metadata Loading
+		local function deleteAllLogs()
+			local allLogs = listfiles(logPath)
+
+			for _,v in pairs(allLogs) do
+				delfile(v)
+			end
+		end
+
+		if isfile(metaDataPath) then
+			local decoded = decode(readfile(metaDataPath))
+
+			if decoded then
+				local formatted = format(decoded,defaultMetaData)
+
+				if formatted then
+					if formatted["LegacyLogVersion"] then -- log system changed as of 9/25/21
+						deleteAllLogs()
+
+						formatted["LegacyLogVersion"] = false
+					end
+
+					local encoded = encode(formatted)
+
+					if encoded then
+						writefile(metaDataPath,encoded)
+					else
+						warn("Failed to encode metadata")
+					end
+				end
+			end
+		else
+			local encoded = encode(defaultMetaData)
+
+			writefile(metaDataPath,encoded or "Unable to decode")
+
+			deleteAllLogs()
 		end
 
 		local sessions = listfiles(sessionDataFolderPath)
 
 		local sessionCount = 0
-		
+
 		for i=1,#sessions do
 			local path = sessionPath..tostring(i)..extension
 
@@ -269,13 +313,13 @@ do
 				local raw = readfile(path)
 
 				local decoded = decode(raw)
-				
-				if decoded then					
+
+				if decoded then
 					local formatted = format(decoded,CashLog)
 
 					if formatted and formatted ~= {} and formatted ~= decoded then
 						local encoded = encode(formatted)
-						
+
 						if encoded then
 							writefile(path,encoded)
 						end
@@ -318,36 +362,36 @@ do
 			if i ~= v then
 				local oldPath = sessionPath..v..extension
 				local newPath = sessionPath..i..extension
-				
+
 				local data = readfile(oldPath)
-				
+
 				delfile(oldPath)
-				
+
 				writefile(newPath,data)
 			end
 		end
-		
+
 		local final = #listfiles(sessionDataFolderPath)
-		
+
 		-- update money earned and time spent variables
 		for i=1,final do
 			local path = sessionPath..tostring(i)..extension
-			
+
 			-- at this point we don't need to be careful because we are relying on the fact that the previous tests made sure all information is truthy and ordered
 			local data = decode(readfile(path))
 
 			allMoneyEarned = allMoneyEarned+data.MoneyEarned
 			allTimeSpent = allTimeSpent+data.TimeSpent
 		end
-		
+
 		do -- remove current stats from this
 			allMoneyEarned = math.floor(allMoneyEarned-MoneyEarned)
 			local timeSpent = SecondsSpentRobbing
-			
+
 			if AutoRobEnabled then
 				timeSpent = timeSpent+(os.clock()-CurrentRobbingStart)
 			end
-			
+
 			allTimeSpent = math.floor(allTimeSpent-timeSpent)
 		end
 
@@ -377,7 +421,7 @@ do
 		end
 
 		local totalSeperate = (seperateLength*2)+#longest
-		
+
 		local t = string.rep(topSep,totalSeperate).."\n"
 
 		logText = t
@@ -394,7 +438,7 @@ do
 
 		logText = logText..t
 
-		thisLogPath = logPath..fileSeperator..os.clock()..extension
+		thisLogPath = logPath..fileSeperator..os.time()..extension
 
 		writefile(thisLogPath,logText)
 
@@ -406,14 +450,14 @@ local nowIndex = LoadFiles()+1
 
 local function writeLog(data,index)
 	index = index or nowIndex
-	
+
 	local path = sessionPath..tostring(index)..extension
-	
+
 	local formatted = format(data,CashLog)
-	
+
 	if formatted then
 		local encoded = encode(formatted)
-		
+
 		if encoded then
 			writefile(path,encoded)
 		end
@@ -445,19 +489,19 @@ local function save()
 	local now = os.clock()
 	-- Cash Log
 	local timeSpent = SecondsSpentRobbing
-		
+
 	if AutoRobEnabled then
 		timeSpent = timeSpent+(now-CurrentRobbingStart)
 	end
-			
+
 	local newLog = {
 		["MoneyEarned"] = MoneyEarned;
 		["TimeSpent"] = math.floor(timeSpent);
 		["Time"] = os.time(); -- in UTC time (os.time())
 	}
-			
+
 	writeLog(newLog)
-			
+
 	local newConfigs = {
 		["AutoRobNotifs"] = AutoRobNotifs;
 		["HoldWallet"] = HoldWallet;
@@ -465,9 +509,9 @@ local function save()
 		["SelectedAFKSpot"] = SelectedAFKSpot;
 		["LowerGFX"] = LowerGFX;
 	}
-			
+
 	local encoded = encode(newConfigs)
-			
+
 	if encoded then
 		writefile(configPath,encoded)
 	end
@@ -481,12 +525,12 @@ end
 
 do -- Save Loop
 	local last = os.clock()
-	
+
 	HB:Connect(function()
 		local now = os.clock()
 		if now-last >= saveInterval and DoSessionSaving then
 			last = now
-			
+
 			save()
 		end
 	end)
@@ -881,13 +925,13 @@ local SessionSavingText = SessionSaving:addBody("Session saving occurs every ~".
 do -- updater
 	HB:Connect(function()
 		local newText = "Session saving occurs every ~"..tostring(saveInterval).." seconds \n \nLast Save: "
-		
+
 		if lastSave == -1 then
 			newText = newText.."Never"
 		else
 			newText = newText..tostring(formatTime(os.clock()-lastSave)).." ago"
 		end
-		
+
 		SessionSavingText.Body.Text = newText
 	end)
 end
@@ -990,7 +1034,7 @@ do
 		"High School (1)";
 		"High School (2)";
 	}
-	
+
 	-- Items
 	local key = Shop:FindFirstChild("[Key] - $125")
 
@@ -1007,7 +1051,7 @@ do
 
 		local autoRobStatsText = ' \n<b>This session:</b>\n \nMoney Earned: <font color="rgb(0,255,0)">$'..MoneyEarned..'</font>\nTime Spent: '..formatTime(timeSpent)..'\n \n'..'<b>All sessions:</b>\n \nMoney Earned: <font color="rgb(0,255,0)">$'..(allMoneyEarned+MoneyEarned)..'</font>\nTime Spent: '..formatTime(allTimeSpent+timeSpent)..'\n '
 		local newText = ' \n<b>Currently Robbing: </b>'..currentlyRobbing.."\n \n<b>Register List:</b> \n "
-		
+
 		local registerOrder = { -- Display order
 			1,
 			2,
@@ -1063,9 +1107,9 @@ do
 			end
 			newText = newText..addText
 		end
-		
+
 		newText = newText.."\n "
-		
+
 		AutoRobStatsBody.Body.Text = autoRobStatsText
 		Status.Body.Text = newText
 	end
@@ -1094,7 +1138,7 @@ do
 			return registerFound
 		end
 	end
-	
+
 	local boundary do
 		boundary = Instance.new("Model")
 
@@ -1165,7 +1209,7 @@ do
 		p4.Parent = boundary
 		p5.Parent = boundary
 	end
-	
+
 	-- Auto Rob Loop
 
 	local function autoRobLoop()
@@ -1258,26 +1302,26 @@ do
 				task.wait(0.1)
 				db = false
 			end
-			
+
 			if db then return else db = true end
-			
+
 			pcall(function()
 				if not player:FindFirstChild("DataFolder") then return end
-				
+
 				local character = mobileCharacter()
 
 				local function updateCharacterVar()
 					character = mobileCharacter()
-				end		
+				end
 
 				if AutoRobEnabled and character then
 					-- Check if they are arrested or banned
 					local jail = player.DataFolder.Information:FindFirstChild("Jail")
-					
-					
+
+
 					if jail then
 						local jailTime = tonumber(jail.Value)
-						
+
 						if jailTime > 50000000 then
 							-- Assume they are banned
 							return
@@ -1289,7 +1333,7 @@ do
 							fireclickdetector(key:FindFirstChildOfClass("ClickDetector"))
 							task.wait(0.75)
 							local key = player.Backpack:FindFirstChild("[Key]")
-							
+
 							if key then
 								task.wait(0.5)
 								key.Parent = character
@@ -1297,9 +1341,9 @@ do
 								error("No key found after purchasing!")
 							end
 						end
-						
+
 					end
-					
+
 					local register = getRegister()
 
 					if register then
@@ -1319,7 +1363,7 @@ do
 						updateStatus("Now Robbing: "..name)
 
 						local startTime = os.clock()
-						
+
 						-- Put the boundary around it so cash doesn't go everywhere
 						boundary.Parent = workspace
 						boundary:SetPrimaryPartCFrame(headCFrame)
@@ -1382,12 +1426,12 @@ do
 								return
 							end
 						end)
-						
+
 						repeatSub.Event:Wait()
 
 						-- Collect the cash
 						if AutoRobEnabled then
-							
+
 							inAfkSpot = false
 
 							local moneyFoundNear = 0
@@ -1515,7 +1559,7 @@ do
 
 							CamGoal = afkSpotCFrame * registerOffset:Inverse() * camOffset
 							goal = afkSpotCFrame
-							
+
 							boundary.Parent = nil
 						end
 					end
@@ -1888,39 +1932,39 @@ end
 
 do -- Aimlock
 	local key = "Z"
-	
+
 	local target = nil
 	local holding = false
-	
+
 	UIS.InputBegan:Connect(function(input,gpe)
 		if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode[key] and not gpe and #Players:GetPlayers() > 0 then
 			if not holding then
 				local me = mobileCharacter()
-				
+
 				if me then
 					local mr = me.PrimaryPart
-					
+
 					local selected = nil
-					
+
 					local params = RaycastParams.new()
 					local filter = {}
-					
+
 					for i,v in pairs(Players:GetPlayers()) do
 						if v ~= player and mobileCharacter(v.Character) then
 							table.insert(filter,v.Character)
 						end
 					end
-					
+
 					params.FilterDescendantsInstances = filter
 					params.FilterType = Enum.RaycastFilterType.Whitelist
 					params.IgnoreWater = false
-					
+
 					local mousePos = UIS:GetMouseLocation()
-					
+
 					local unitRay = Camera:ScreenPointToRay(mousePos.X,mousePos.Y)
-					
+
 					local ray = workspace:Raycast(unitRay.Origin,unitRay.Direction*100,params)
-					
+
 					if ray then
 						selected = Players:GetPlayerFromCharacter(ray.Instance:FindFirstAncestorOfClass("Model"))
 
@@ -1928,7 +1972,7 @@ do -- Aimlock
 							local dataFolder = selected:FindFirstChild("DataFolder")
 							local information = dataFolder and dataFolder:FindFirstChild("Information")
 							local crew = information and information:FindFirstChild("Crew")
-	
+
 							local otherCrewId = crew and tonumber(crew.Value)
 
 							if (Crew == 0 and otherCrewId == 0) or (Crew ~= otherCrewId) then
@@ -1985,7 +2029,7 @@ do -- Aimlock
 								end
 							end
 						end
-						
+
 						if best then
 							target = best
 							holding = true
@@ -2001,34 +2045,34 @@ do -- Aimlock
 			end
 		end
 	end)
-	
+
 	local guess = 2
 	local alpha = 1
-	
+
 	local update = HB:Connect(function()
 		if AimlockEnabled then
 			if holding then
 				local them = target.Character
-				
+
 				if them then
 					them = mobileCharacter(them)
-					
+
 					if them then
 						local root = them.PrimaryPart
 						local humanoid = them:FindFirstChildOfClass("Humanoid")
 						local goal = root.CFrame + (humanoid.MoveDirection*guess) + (root.Velocity/50)*guess
-						
+
 						local zoom = (Camera.CFrame.Position-Camera.Focus.Position).Magnitude
 						local point,onScreen = Camera:WorldToScreenPoint(goal.Position)
 
 						if UIS.MouseBehavior ~= Enum.MouseBehavior.LockCurrentPosition then
-							if UIS.MouseBehavior == Enum.MouseBehavior.LockCenter or not onScreen then					
+							if UIS.MouseBehavior == Enum.MouseBehavior.LockCenter or not onScreen then
 								Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.Focus.Position,goal.Position),alpha)
 							else
 								mousemoveabs(point.X,point.Y+36)
 							end
 						end
-						
+
 						return
 					end
 				end
