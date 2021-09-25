@@ -15,8 +15,8 @@ The best Da Hood script there is.
 ]]--
 
 -- Identifier Configurations
-local VERSION = "6.0"
-local BETA = true
+local VERSION = "1.0"
+local BETA = false
 
 -- Actual Code
 if not game:IsLoaded() then
@@ -82,6 +82,9 @@ local Shop = ignored:WaitForChild("Shop",20)
 
 local AfkSpots = {
 	["Admin Base"] = CFrame.new(-798.5,-39.425,-843.75);
+	["Flat Hill"] = CFrame.new(0,11.75,222);
+	["Admin Roof"] = CFrame.new(-960.1,-3.64,-1014.876);
+	["Under Map"] = CFrame.new(166.6,-40.44,53.3);
 }
 
 -- Statistics
