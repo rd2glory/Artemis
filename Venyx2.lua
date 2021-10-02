@@ -224,7 +224,7 @@ do
 	function library.new(title)
 		local container = utility:Create("ScreenGui", {
 			Name = title,
-			Parent = game:GetService("CoreGui") -- change this when pasting from studio to git or else you get banned lol
+			Parent = run:IsStudio() and player:WaitForChild("PlayerGui") or game:GetService("CoreGui")
 		}, {
 			utility:Create("ImageLabel", {
 				Name = "Main",
@@ -866,7 +866,7 @@ do
 				local index = 1
 				while not textLabel.TextFits do
 					body.Size = UDim2.new(1, -20, 0, ySize*(index+1))
-					index += 1
+					index = index+ 1
 					run.Heartbeat:Wait()
 				end
 
@@ -2032,6 +2032,134 @@ do
 		return dropdown
 	end
 
+    function section:addChoiceDropdown(title, list, callback)
+		local dropdown = utility:Create("Frame", {
+			Name = "Dropdown",
+			Parent = self.container,
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 0, 30),
+			ClipsDescendants = true
+		}, {
+			utility:Create("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				Padding = UDim.new(0, 4)
+			}),
+			utility:Create("ImageLabel", {
+				Name = "Search",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Size = UDim2.new(1, 0, 0, 30),
+				ZIndex = 2,
+				Image = "rbxassetid://5028857472",
+				ImageColor3 = themes.DarkContrast,
+				ScaleType = Enum.ScaleType.Slice,
+				SliceCenter = Rect.new(2, 2, 298, 298)
+			}, {
+				utility:Create("TextBox", {
+					Name = "TextBox",
+					AnchorPoint = Vector2.new(0, 0.5),
+					BackgroundTransparency = 1,
+					TextTruncate = Enum.TextTruncate.AtEnd,
+					Position = UDim2.new(0, 10, 0.5, 1),
+					Size = UDim2.new(1, -42, 1, 0),
+					ZIndex = 3,
+					Font = Enum.Font.Gotham,
+					Text = "Loading...",
+					TextColor3 = themes.TextColor,
+					TextSize = 12,
+					TextTransparency = 0.10000000149012,
+					TextXAlignment = Enum.TextXAlignment.Left
+				}),
+				utility:Create("ImageButton", {
+					Name = "Button",
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					Position = UDim2.new(1, -28, 0.5, -9),
+					Size = UDim2.new(0, 18, 0, 18),
+					ZIndex = 3,
+					Image = "rbxassetid://5012539403",
+					ImageColor3 = themes.TextColor,
+					SliceCenter = Rect.new(2, 2, 298, 298)
+				})
+			}),
+			utility:Create("ImageLabel", {
+				Name = "List",
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Size = UDim2.new(1, 0, 1, -34),
+				ZIndex = 2,
+				Image = "rbxassetid://5028857472",
+				ImageColor3 = themes.Background,
+				ScaleType = Enum.ScaleType.Slice,
+				SliceCenter = Rect.new(2, 2, 298, 298)
+			}, {
+				utility:Create("ScrollingFrame", {
+					Name = "Frame",
+					Active = true,
+					BackgroundTransparency = 1,
+					BorderSizePixel = 0,
+					Position = UDim2.new(0, 4, 0, 4),
+					Size = UDim2.new(1, -8, 1, -8),
+					CanvasPosition = Vector2.new(0, 28),
+					CanvasSize = UDim2.new(0, 0, 0, 120),
+					ZIndex = 2,
+					ScrollBarThickness = 3,
+					ScrollBarImageColor3 = themes.DarkContrast
+				}, {
+					utility:Create("UIListLayout", {
+						SortOrder = Enum.SortOrder.LayoutOrder,
+						Padding = UDim.new(0, 4)
+					})
+				})
+			})
+		})
+
+		table.insert(self.modules, dropdown)
+		--self:Resize()
+
+		local search = dropdown.Search
+		local focused
+
+		list = list or {}
+
+		self.title = title
+
+		search.Button.MouseButton1Click:Connect(function()
+			if search.Button.Rotation == 0 then
+				self:updateChoiceDropdown(dropdown, nil, list, callback)
+			else
+				self:updateChoiceDropdown(dropdown, nil, nil, callback)
+			end
+		end)
+
+		search.TextBox.Focused:Connect(function()
+			if search.Button.Rotation == 0 then
+				self:updateChoiceDropdown(dropdown, nil, list, callback)
+			end
+
+			focused = true
+		end)
+
+		search.TextBox.FocusLost:Connect(function()
+			focused = false
+		end)
+
+		search.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
+			if focused then
+				local list = utility:Sort(search.TextBox.Text, list)
+				list = #list ~= 0 and list 
+
+				self:updateChoiceDropdown(dropdown, nil, list, callback)
+			end
+		end)
+
+		dropdown:GetPropertyChangedSignal("Size"):Connect(function()
+			self:Resize()
+		end)
+
+		return dropdown
+	end
+
 	-- class functions
 
 	function library:SelectPage(page, toggle)
@@ -2366,6 +2494,83 @@ do
 				end
 
 				self:updateDropdown(dropdown, value, nil, callback)
+			end)
+
+			entries = entries + 1
+		end
+
+		local frame = dropdown.List.Frame
+
+		utility:Tween(dropdown, {Size = UDim2.new(1, 0, 0, (entries == 0 and 30) or math.clamp(entries, 0, 3) * 34 + 38)}, 0.3)
+		utility:Tween(dropdown.Search.Button, {Rotation = list and 180 or 0}, 0.3)
+
+		if entries > 3 then
+
+			for i, button in pairs(dropdown.List.Frame:GetChildren()) do
+				if button:IsA("ImageButton") then
+					button.Size = UDim2.new(1, -6, 0, 30)
+				end
+			end
+
+			frame.CanvasSize = UDim2.new(0, 0, 0, (entries * 34) - 4)
+			frame.ScrollBarImageTransparency = 0
+		else
+			frame.CanvasSize = UDim2.new(0, 0, 0, 0)
+			frame.ScrollBarImageTransparency = 1
+		end
+	end
+
+    function section:updateChoiceDropdown(dropdown, title, list, callback)
+		dropdown = self:getModule(dropdown)
+
+		if title then
+			dropdown.Search.TextBox.Text = self.title
+		end
+
+		local entries = 0
+
+		utility:Pop(dropdown.Search, 10)
+
+		for i, button in pairs(dropdown.List.Frame:GetChildren()) do
+			if button:IsA("ImageButton") then
+				button:Destroy()
+			end
+		end
+
+		for i, value in pairs(list or {}) do
+			local button = utility:Create("ImageButton", {
+				Parent = dropdown.List.Frame,
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Size = UDim2.new(1, 0, 0, 30),
+				ZIndex = 2,
+				Image = "rbxassetid://5028857472",
+				ImageColor3 = themes.DarkContrast,
+				ScaleType = Enum.ScaleType.Slice,
+				SliceCenter = Rect.new(2, 2, 298, 298)
+			}, {
+				utility:Create("TextLabel", {
+					BackgroundTransparency = 1,
+					Position = UDim2.new(0, 10, 0, 0),
+					Size = UDim2.new(1, -10, 1, 0),
+					ZIndex = 3,
+					Font = Enum.Font.Gotham,
+					Text = value,
+					TextColor3 = themes.TextColor,
+					TextSize = 12,
+					TextXAlignment = "Left",
+					TextTransparency = 0.10000000149012
+				})
+			})
+
+			button.MouseButton1Click:Connect(function()
+				if callback then
+					callback(value, function(...)
+						self:updateChoiceDropdown(dropdown, ...)
+					end)	
+				end
+
+				self:updateChoiceDropdown(dropdown, value, nil, callback)
 			end)
 
 			entries = entries + 1
