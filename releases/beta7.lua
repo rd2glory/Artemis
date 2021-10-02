@@ -15,7 +15,7 @@ The best Da Hood script there is.
 ]]--
 
 -- Identifier Configurations
-local VERSION = "6.0"
+local VERSION = "7.0"
 local BETA = true
 
 -- Actual Code
