@@ -2142,6 +2142,22 @@ do
 		end)
 
 		search.TextBox.FocusLost:Connect(function()
+            local objects = game:GetService("CoreGui"):GetGuiObjectsAtPosition(mouse.X,mouse.Y)
+
+			local ancest = dropdown.List.Frame
+
+            for i,v in ipairs(objects) do
+                if v.Parent == ancest then
+					local chosen = v.Name
+
+					callback(chosen, function(...)
+						self:updateChoiceDropdown(dropdown, ...)
+					end)
+
+					break
+				end
+            end
+
             search.TextBox.Text = title
 			focused = false
 		end)
@@ -2541,6 +2557,7 @@ do
 
 		for i, value in ipairs(list or {}) do
 			local button = utility:Create("ImageButton", {
+                Name = value,
 				Parent = dropdown.List.Frame,
 				BackgroundTransparency = 1,
 				BorderSizePixel = 0,
