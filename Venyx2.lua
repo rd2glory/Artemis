@@ -2064,7 +2064,7 @@ do
 					Size = UDim2.new(1, -42, 1, 0),
 					ZIndex = 3,
 					Font = Enum.Font.Gotham,
-					Text = "Loading...",
+					Text = title,
 					TextColor3 = themes.TextColor,
 					TextSize = 12,
 					TextTransparency = 0.10000000149012,
@@ -2524,20 +2524,20 @@ do
 		dropdown = self:getModule(dropdown)
 
 		if title then
-			dropdown.Search.TextBox.Text = self.title
+			dropdown.Search.TextBox.Text = title
 		end
 
 		local entries = 0
 
 		utility:Pop(dropdown.Search, 10)
 
-		for i, button in pairs(dropdown.List.Frame:GetChildren()) do
+		for i, button in ipairs(dropdown.List.Frame:GetChildren()) do
 			if button:IsA("ImageButton") then
 				button:Destroy()
 			end
 		end
 
-		for i, value in pairs(list or {}) do
+		for i, value in ipairs(list or {}) do
 			local button = utility:Create("ImageButton", {
 				Parent = dropdown.List.Frame,
 				BackgroundTransparency = 1,
