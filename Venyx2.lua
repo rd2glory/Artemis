@@ -2033,6 +2033,7 @@ do
 	end
 
     function section:addChoiceDropdown(title, list, callback)
+
 		local dropdown = utility:Create("Frame", {
 			Name = "Dropdown",
 			Parent = self.container,
@@ -2141,6 +2142,7 @@ do
 		end)
 
 		search.TextBox.FocusLost:Connect(function()
+            search.TextBox.Text = title
 			focused = false
 		end)
 
