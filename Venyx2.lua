@@ -2559,7 +2559,7 @@ do
 					TextColor3 = themes.TextColor,
 					TextSize = 12,
 					TextXAlignment = "Left",
-					TextTransparency = 0.10000000149012
+					TextTransparency = 0.1
 				})
 			})
 
@@ -2570,7 +2570,7 @@ do
 					end)	
 				end
 
-				self:updateChoiceDropdown(dropdown, value, nil, callback)
+				self:updateChoiceDropdown(dropdown, title, nil, callback)
 			end)
 
 			entries = entries + 1
