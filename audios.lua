@@ -35,6 +35,18 @@ local audios = {
 		ID = 261605308;
 		Name = "Souja Boy - Rick and Morty"
 	};
+    {
+		ID = 4551697370;
+		Name = "Arizona Zervas - Roxanne (Remix)"
+	};
+    {
+		ID = 250408242;
+		Name = "Bossfight - Milky Ways"
+	};
+    {
+		ID = 7199899359;
+		Name = "Lil Nas X + Masked Wolf - Industry Baby In The Ocean (Remix)"
+	};
 }
 -- i could have used JSON decoding, but I was lazy
 shared.audios = audios
