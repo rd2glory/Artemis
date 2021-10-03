@@ -640,7 +640,7 @@ local function resetCharacter(shouldYield)
 	end
 end
 
-local function tp(goal,shouldYield)
+local function tp(goal,shouldYield,removeVelocity)
 	local char = mobileCharacter()
 
 	if not char and shouldYield then
@@ -658,7 +658,12 @@ local function tp(goal,shouldYield)
 		b:Destroy()
 	end
 	if char then
-		char.PrimaryPart.CFrame = goal
+		local root = char.PrimaryPart
+
+		if removeVelocity then
+			root.AssemblyLinearVelocity = Vector3.new()
+		end
+		root.CFrame = goal
 	end
 end
 
@@ -996,7 +1001,7 @@ do
 
 	local savedPos = nil
 
-	local updateEvent = HB:Connect(function()
+	HB:Connect(function()
 
 		do
 			if killPlayer ~= lastFramePlayer then
@@ -1009,7 +1014,7 @@ do
 					event = killPlayer.CharacterRemoving:Connect(function()
 						killPlayer = nil
 						if savedPos then
-							tp(savedPos)
+							tp(savedPos,nil,true)
 						end
 					end)
 				end				
