@@ -1006,7 +1006,7 @@ do
 				savedPos = nil
 				
 				if killPlayer and stomp then
-					killPlayer.CharacterRemoving:Connect(function()
+					event = killPlayer.CharacterRemoving:Connect(function()
 						killPlayer = nil
 						if savedPos then
 							tp(savedPos)
