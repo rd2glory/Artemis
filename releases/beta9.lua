@@ -15,7 +15,7 @@ The best Da Hood script there is.
 ]]--
 
 -- Identifier Configurations
-local VERSION = "8"
+local VERSION = "9"
 local BETA = true
 
 -- Actual Code
@@ -25,7 +25,7 @@ end
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/iamtryingtofindname/Artemis/main/Venyx2.lua"))()
 
-local Artemis = library.new("Artemis ("..(BETA and "beta " or "v")..VERSION..")")
+local Artemis = library.new("Artemis ("..(BETA and "b" or "v")..VERSION..")")
 
 -- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
