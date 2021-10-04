@@ -1088,7 +1088,7 @@ do
 							if not savedPos then
 								savedPos = killPlayer.Character.PrimaryPart.CFrame
 							end
-							tp((killPlayer.Character:FindFirstChild("UpperTorso") or killPlayer.Character:FindFirstChild("Torso")).CFrame*CFrame.new(0,0,1))
+							tp((killPlayer.Character:FindFirstChild("UpperTorso") or killPlayer.Character:FindFirstChild("Torso")).CFrame*CFrame.new(0,0,1.3))
 							MainEvent:FireServer("Stomp")
 						else
 							tp(killPlayer.Character.PrimaryPart.CFrame*CFrame.new(0,2,0))
