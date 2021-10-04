@@ -15,7 +15,7 @@ The best Da Hood script there is.
 ]]--
 
 -- Identifier Configurations
-local VERSION = "10"
+local VERSION = "11"
 local BETA = true
 
 -- Actual Code
@@ -1088,7 +1088,7 @@ do
 							if not savedPos then
 								savedPos = killPlayer.Character.PrimaryPart.CFrame
 							end
-							tp((killPlayer.Character:FindFirstChild("UpperTorso") or killPlayer.Character:FindFirstChild("Torso")).CFrame*CFrame.new(0,0,2))
+							tp((killPlayer.Character:FindFirstChild("UpperTorso") or killPlayer.Character:FindFirstChild("Torso")).CFrame*CFrame.new(0,0,1))
 							MainEvent:FireServer("Stomp")
 						else
 							tp(killPlayer.Character.PrimaryPart.CFrame*CFrame.new(0,2,0))
