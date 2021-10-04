@@ -977,7 +977,7 @@ end,function(text)
 	return fill(text,getPlayerNames(true,useDisplayName2))
 end)
 
-local ToggleUseDisplayNameForTeleport2 = KillPlayer:addToggle("Use Display Name",useDisplayName2,function(newValue)
+KillPlayer:addToggle("Use Display Name",useDisplayName2,function(newValue)
 	useDisplayName2 = newValue
 end)
 
@@ -1000,6 +1000,7 @@ do
 	local event = nil
 
 	local savedPos = nil
+	local oldPos = nil
 
 	HB:Connect(function()
 
@@ -1067,7 +1068,7 @@ do
 							if not savedPos then
 								savedPos = killPlayer.Character.PrimaryPart.CFrame
 							end
-							tp((killPlayer.Character:FindFirstChild("UpperTorso") or killPlayer.Character:FindFirstChild("Torso")).CFrame*CFrame.new(0,1,0))
+							tp((killPlayer.Character:FindFirstChild("UpperTorso") or killPlayer.Character:FindFirstChild("Torso")).CFrame*CFrame.new(0,0,2))
 							MainEvent:FireServer("Stomp")
 						else
 							tp(killPlayer.Character.PrimaryPart.CFrame*CFrame.new(0,2,0))
@@ -1085,28 +1086,47 @@ do
 			Camera.CameraSubject = char:FindFirstChildOfClass("Humanoid")
 		end
 	end)
+
+	KillPlayer:addButton("Knock Player",function()
+		if selectedKillPlayer and mobileCharacter(selectedKillPlayer.Character) then
+			killPlayer = selectedKillPlayer
+			stomp = false
+			logAction("Started knocking "..getFullName(killPlayer))
+			if not killPlayer and mobileCharacter() then
+				oldPos = mobileCharacter().PrimaryPart.CFrame
+			end
+		else
+			Artemis:Notify("Knock Error","Failed to select player!")
+		end
+	end)
+	
+	KillPlayer:addButton("Stomp Player",function()
+		if selectedKillPlayer and mobileCharacter(selectedKillPlayer.Character) then
+			killPlayer = selectedKillPlayer
+			stomp = true
+			logAction("Started stomping "..getFullName(killPlayer))
+			if not killPlayer and mobileCharacter() then
+				oldPos = mobileCharacter().PrimaryPart.CFrame
+			end
+		else
+	
+			Artemis:Notify("Stomp Error","Failed to select player!")
+		end
+	end)
+	
+	KillPlayer:addButton("Stop Kill",function()
+		if selectedKillPlayer and mobileCharacter(selectedKillPlayer.Character) then
+			logAction("Stopped killing "..getFullName(killPlayer))
+			killPlayer = nil
+			if oldPos then
+				HB:Wait()
+				tp(oldPos,nil,true)
+			else
+				warn("No CFrame found when teleporting player back to old position")
+			end
+		end
+	end)
 end
-
-KillPlayer:addButton("Knock Player",function()
-	if selectedKillPlayer and mobileCharacter(selectedKillPlayer.Character) then
-		killPlayer = selectedKillPlayer
-		stomp = false
-		logAction("Started knocking "..getFullName(killPlayer))
-	else
-		Artemis:Notify("Knock Error","Failed to select player!")
-	end
-end)
-
-KillPlayer:addButton("Stomp Player",function()
-	if selectedKillPlayer and mobileCharacter(selectedKillPlayer.Character) then
-		killPlayer = selectedKillPlayer
-		stomp = true
-		logAction("Started stomping "..getFullName(killPlayer))
-	else
-
-		Artemis:Notify("Stomp Error","Failed to select player!")
-	end
-end)
 
 -- other
 
