@@ -1353,6 +1353,10 @@ do
 		if selectedKillPlayer and selectedKillPlayer.Character and mobileCharacter(selectedKillPlayer.Character) then
 			logAction("Stopped killing "..getFullName(killPlayer))
 			killPlayer = nil
+			pcall(function()
+				event:Disconnect()
+			end)
+			event = nil
 			if oldPos then
 				HB:Wait()
 				tp(oldPos,nil,true)
@@ -1391,7 +1395,9 @@ local AimlockToggle = Aimlock:addToggle("Aimlock (Z)",AimlockEnabled,function(ne
 end)
 
 -- Audio Player
-do	-- load audios
+local success,ownsBoombox = pcall(MPS.UserOwnsGamePassAsync,MPS,player.UserId,6207330)
+
+if success and ownsBoombox then	-- load audios
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/iamtryingtofindname/Artemis/main/audios.lua"))()
 
 	local audios = shared.audios
@@ -1565,6 +1571,11 @@ do	-- load audios
 	end
 
 	player.CharacterAdded:Connect(onAdded)
+else
+	local function red(text)
+		return '<font color="rgb(255,0,0)">'..text..'</font>'
+	end
+	Audio:addBody(success and red("You do not own the boombox gamepass! If you purchase it while in game, you will have to rejoin for Audio Player to work.") or red("Failed to check if user own the boombox gamepass! Please rejoin. If this error persists, there may be something internally wrong.\n\n").."Error message: "..red(ownsBoombox))
 end
 
 -- Game Settings
@@ -2812,7 +2823,7 @@ do -- Aimlock
 	local guess = 2
 	local alpha = 1
 
-	local update = HB:Connect(function()
+	HB:Connect(function()
 		if AimlockEnabled then
 			if holding then
 				local them = target.Character
