@@ -1251,9 +1251,11 @@ do
 		local targets = Players:GetPlayers()
 
 		for i,v in pairs(targets) do
-			if v == player then
+			local otherCrewValue = player:WaitForChild("DataFolder",180):WaitForChild("Information",10):FindFirstChild("Crew")
+			local otherCrew = CrewValue and tonumber(CrewValue.Value) or 0
+			updateCrew()
+			if v == player or Crew == otherCrew then
 				table.remove(targets,i)
-				break
 			end
 		end
 
@@ -1302,9 +1304,11 @@ do
 		local targets = Players:GetPlayers()
 
 		for i,v in pairs(targets) do
-			if v == player then
+			local otherCrewValue = player:WaitForChild("DataFolder",180):WaitForChild("Information",10):FindFirstChild("Crew")
+			local otherCrew = CrewValue and tonumber(CrewValue.Value) or 0
+			updateCrew()
+			if v == player or Crew == otherCrew then
 				table.remove(targets,i)
-				break
 			end
 		end
 
