@@ -1267,7 +1267,7 @@ do
 
 		local target = nil
 
-		logAction("Stopped knocking all")
+		logAction("Started knocking all")
 
 		killAllHook = HB:Connect(function()
 			if #targets == 0 then
@@ -1318,7 +1318,7 @@ do
 
 		local target = nil
 
-		logAction("Stopped killing all")
+		logAction("Started stomping all")
 
 		killAllHook = HB:Connect(function()
 			if #targets == 0 then
@@ -1350,19 +1350,17 @@ do
 	
 	AutoAttack:addButton("Stop Kill",function()
 		disconnectLoop()
-		if selectedKillPlayer and selectedKillPlayer.Character and mobileCharacter(selectedKillPlayer.Character) then
-			logAction("Stopped killing "..getFullName(killPlayer))
-			killPlayer = nil
-			pcall(function()
-				event:Disconnect()
-			end)
-			event = nil
-			if oldPos then
-				HB:Wait()
-				tp(oldPos,nil,true)
-			else
-				warn("No CFrame found when teleporting player back to old position")
-			end
+		logAction("Stopped killing process")
+		killPlayer = nil
+		pcall(function()
+			event:Disconnect()
+		end)
+		event = nil
+		if oldPos then
+			HB:Wait()
+			tp(oldPos,nil,true)
+		else
+			warn("No CFrame found when teleporting player back to old position")
 		end
 	end)
 end
