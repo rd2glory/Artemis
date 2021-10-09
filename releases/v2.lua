@@ -2341,7 +2341,7 @@ do
 
 		local pos = Instance.new("BodyPosition", torso)
 		local gyro = Instance.new("BodyGyro", torso)
-		pos.Name = tostring(math.random(10000000,1000000000000))
+		pos.Name = "EPIXPOS"
 		pos.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
 		pos.Position = torso.Position
 		gyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
