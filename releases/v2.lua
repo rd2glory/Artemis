@@ -707,31 +707,26 @@ local function formatTime(seconds)
 end
 
 do -- basic security
-	local a = getrawmetatable(game)
-	local sucks = a.__namecall
 	local player = game.Players.LocalPlayer
-	setreadonly(a, false)
-	a.__namecall = newcclosure(function(name, ...)
-		local tabs = {
-			...
-		}
-		if getnamecallmethod() == "FireServer" and tostring(name) == "MainEvent" then
-			if tabs[1] == "CHECKER_1" or tabs[1] == "TeleportDetect" or tabs[1] == "OneMoreTime" then
-				return wait(9e9)
-			end
+
+	local oldFunc = nil
+
+	oldFunc = hookfunction(MainEvent.FireServer, newcclosure(function(Event, ...)
+		local args = {...}
+
+		if args[1] == "CHECKER_1" or args[1] == "TeleportDetect" or args[1] == "OneMoreTime" then
+			return nil
 		end
-		if getnamecallmethod() == "Kick" then
-			return wait(9e9)
-		end
-		return sucks(name, unpack(tabs))
-	end)
+
+		return oldFunc(Event, ...)
+	end))
 
 	local function added(char)
 		while true do
-			wait()
+			HB:Wait()
 			for i,v in pairs(char:GetChildren()) do
 				if v:IsA("Script") and v:FindFirstChildOfClass("LocalScript") then
-					log("Bypassed Anti-Cheat script")
+					log("Bypassed local Anti-Cheat script")
 					v:FindFirstChildOfClass("LocalScript").Source = "-- Cleared by Artemis :)"
 					return
 				end
