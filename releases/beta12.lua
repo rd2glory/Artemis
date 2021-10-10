@@ -15,8 +15,8 @@ The best Da Hood script there is.
 ]]--
 
 -- Identifier Configurations
-local VERSION = "2"
-local BETA = false
+local VERSION = "12"
+local BETA = true
 
 -- Actual Code
 if not game:IsLoaded() then
