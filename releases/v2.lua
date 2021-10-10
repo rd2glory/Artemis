@@ -608,6 +608,10 @@ local function mobileCharacter(char)
 	return false
 end
 
+local function isCop()
+	return DataFolder:WaitForChild("Officer").Value == 1
+end
+
 local function resetCharacter(shouldYield)
 	if shouldYield == nil then
 		shouldYield = true
@@ -706,10 +710,8 @@ local function formatTime(seconds)
 	end
 end
 
-do -- basic security
-	local player = game.Players.LocalPlayer
-
-	local oldFunc = nil
+do -- Artemis Security v2 (so pro)
+    local oldFunc = nil
 
 	oldFunc = hookfunction(MainEvent.FireServer, newcclosure(function(Event, ...)
 		local args = {...}
@@ -721,12 +723,23 @@ do -- basic security
 		return oldFunc(Event, ...)
 	end))
 
+    HB:Connect(function()
+        local root = player.Character and player.Character.PrimaryPart
+
+        if root then
+            for i,v in pairs(getconnections(root:GetPropertyChangedSignal("CFrame"))) do
+                v:Disable()
+            end
+        end
+    end)
+
 	local function added(char)
 		while true do
+            if not char then return end
 			HB:Wait()
 			for i,v in pairs(char:GetChildren()) do
 				if v:IsA("Script") and v:FindFirstChildOfClass("LocalScript") then
-					log("Bypassed local Anti-Cheat script")
+					log("Bypassed Anti-Cheat script")
 					v:FindFirstChildOfClass("LocalScript").Source = "-- Cleared by Artemis :)"
 					return
 				end
@@ -1070,6 +1083,7 @@ end)
 local killPlayer = nil
 local loopKill = false
 local stomp = false
+local arrest = false
 
 do
 	local wasChanged = false
@@ -1089,6 +1103,8 @@ do
 
 	local savedPos = nil
 	local oldPos = nil
+
+	local target = nil -- for kill all
 
 	local function disconnectLoop()
 		pcall(function()
@@ -1113,6 +1129,8 @@ do
 	end
 
 	player.CharacterRemoving:Connect(reset)
+
+	local lastArrest = 0
 
 	HB:Connect(function()
 
@@ -1150,8 +1168,9 @@ do
 				local bp = player.Backpack
 
 				local weapon = (bp:FindFirstChild("[Knife]") or char:FindFirstChild("[Knife]")) or (bp:FindFirstChild("Combat") or char:FindFirstChild("Combat"))
+				local cuffs = isCop and (bp:FindFirstChild("Cuff") or char:FindFirstChild("Cuff"))
 
-				if not (RightWrist and LeftWrist and RH and LH and weapon)  then
+				if not (RightWrist and LeftWrist and RH and LH and weapon and (not isCop() or cuffs))  then
 					db = false
 					return
 				else
@@ -1159,7 +1178,6 @@ do
 					wasChanged = false
 
 					if otherChar then
-
 						Camera.CameraSubject = otherChar:FindFirstChildOfClass("Humanoid")
 
 						LeftWrist.Parent = nil
@@ -1172,6 +1190,10 @@ do
 
 						weapon.Parent = char
 						weapon:Activate()
+
+						if cuffs then
+							cuffs.Parent = bp
+						end
 
 						RH.CFrame = goal2
 						LH.CFrame = goal2
@@ -1188,7 +1210,21 @@ do
 									tp(CFrame.new(torso.Position)*CFrame.new(0,2.5,0))
 								end
 							end
-							MainEvent:FireServer("Stomp")
+							if arrest and isCop() then
+								cuffs.Parent = char
+								if os.clock()-lastArrest > 0.1 then
+									wait(0.5)
+									cuffs:Activate()
+									lastArrest = os.clock()
+									if killPlayer.leaderstats.Wanted.Value <= 0 or killPlayer.DataFolder.Officer.Value ~= 0 then
+										tp(killPlayer.Character.PrimaryPart.CFrame*CFrame.new(0,2,0))
+										target = nil
+										killPlayer = nil
+									end
+								end
+							else
+								MainEvent:FireServer("Stomp")
+							end
 						else
 							if not loopKill then
 								tp(killPlayer.Character.PrimaryPart.CFrame*CFrame.new(0,2,0))
@@ -1217,6 +1253,7 @@ do
 			killPlayer = selectedKillPlayer
 			loopKill = selectedLoopKill
 			stomp = false
+			arrest = false
 			logAction("Started knocking "..getFullName(killPlayer))
 			if not killPlayer and mobileCharacter() then
 				oldPos = mobileCharacter().PrimaryPart.CFrame
@@ -1231,7 +1268,28 @@ do
 			killPlayer = selectedKillPlayer
 			loopKill = selectedLoopKill
 			stomp = true
+			arrest = false
 			logAction("Started stomping "..getFullName(killPlayer))
+			if not killPlayer and mobileCharacter() then
+				oldPos = mobileCharacter().PrimaryPart.CFrame
+			end
+		else
+			Artemis:Notify("Stomp Error","Failed to select player!")
+		end
+	end)
+
+	KillPlayer:addButton("Arrest Selected",function()
+		if not isCop() then
+			Artemis:Notify("You must be a cop to be able to arrest!")
+			return
+		end
+
+		if selectedKillPlayer and mobileCharacter(selectedKillPlayer.Character) and not killAllHook then
+			killPlayer = selectedKillPlayer
+			loopKill = selectedLoopKill
+			stomp = true
+			arrest = true
+			logAction("Started arresting "..getFullName(killPlayer))
 			if not killPlayer and mobileCharacter() then
 				oldPos = mobileCharacter().PrimaryPart.CFrame
 			end
@@ -1249,7 +1307,8 @@ do
 			local otherCrewValue = player:WaitForChild("DataFolder",180):WaitForChild("Information",10):FindFirstChild("Crew")
 			local otherCrew = CrewValue and tonumber(CrewValue.Value) or 0
 			updateCrew()
-			if v == player or Crew == otherCrew then
+			local df = v:FindFirstChild("DataFolder")
+			if v == player or Crew == otherCrew or (not df) then
 				table.remove(targets,i)
 			end
 		end
@@ -1259,10 +1318,9 @@ do
 		end
 
 		stomp = false
+		arrest = false
 
 		local loop = loopKill and true or false
-
-		local target = nil
 
 		logAction("Started knocking all")
 
@@ -1302,7 +1360,8 @@ do
 			local otherCrewValue = player:WaitForChild("DataFolder",180):WaitForChild("Information",10):FindFirstChild("Crew")
 			local otherCrew = CrewValue and tonumber(CrewValue.Value) or 0
 			updateCrew()
-			if v == player or Crew == otherCrew then
+			local df = v:FindFirstChild("DataFolder")
+			if v == player or Crew == otherCrew or (not df) then
 				table.remove(targets,i)
 			end
 		end
@@ -1312,12 +1371,72 @@ do
 		end
 
 		stomp = true
+		arrest = false
 
 		local loop = loopKill and true or false
 
-		local target = nil
-
 		logAction("Started stomping all")
+
+		killAllHook = HB:Connect(function()
+			if #targets == 0 then
+				if loop then
+					targets = Players:GetPlayers()
+				else
+					disconnectLoop()
+					return
+				end
+			end
+			if not (target and target.Character) then
+				pcall(function()
+					killAllPlayerHook:Disconnect()
+				end)
+				local index = math.random(1,#targets)
+				target = targets[index]
+				table.remove(targets,index)
+				if target and target.Character then
+					killAllPlayerHook = target.CharacterRemoving:Connect(function()
+						target = nil
+						killAllPlayerHook:Disconnect()
+					end)
+				end
+			end
+			killPlayer = target
+		end)
+	end)
+
+	KillAll:addButton("Arrest All",function()
+		if killAllHook then return end
+
+		if not isCop() then
+			Artemis:Notify("You must be a cop to be able to arrest!")
+			return
+		end
+
+		local targets = Players:GetPlayers()
+
+		for i,v in pairs(targets) do
+			local otherCrewValue = player:WaitForChild("DataFolder",180):WaitForChild("Information",10):FindFirstChild("Crew")
+			local otherCrew = CrewValue and tonumber(CrewValue.Value) or 0
+			local ls = v:FindFirstChild("leaderstats")
+			local df = v:FindFirstChild("DataFolder")
+			updateCrew()
+			if v == player or Crew == otherCrew or (not df) or (not ls) or df.Officer.Value ~= 0 or ls.Wanted.Value <= 0 then
+				table.remove(targets,i)
+			else
+				print(ls:FindFirstChild("Wanted").Value)
+			end
+		end
+
+		if #targets <= 0 then
+			Artemis:Notify("Nobody is in the server!")
+		end
+
+		stomp = true
+		arrest = true
+
+		local loop = loopKill and true or false
+
+		logAction("Started arresting all")
 
 		killAllHook = HB:Connect(function()
 			if #targets == 0 then
