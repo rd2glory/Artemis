@@ -1191,6 +1191,11 @@ do
 						weapon.Parent = char
 						weapon:Activate()
 
+						if killPlayer.DataFolder.Officer.Value ~= 0 and isCop() then
+							target = nil
+							killPlayer = nil
+						end
+
 						if cuffs then
 							cuffs.Parent = bp
 						end
@@ -1212,9 +1217,10 @@ do
 							end
 							if arrest and isCop() then
 								cuffs.Parent = char
-								if os.clock()-lastArrest > 0.1 then
-									wait(0.5)
-									cuffs:Activate()
+								if os.clock()-lastArrest > 0.25 then
+									task.delay(0.75,function()
+										cuffs:Activate()
+									end)
 									lastArrest = os.clock()
 									if killPlayer.leaderstats.Wanted.Value <= 0 or killPlayer.DataFolder.Officer.Value ~= 0 then
 										tp(killPlayer.Character.PrimaryPart.CFrame*CFrame.new(0,2,0))
@@ -1422,8 +1428,6 @@ do
 			updateCrew()
 			if v == player or Crew == otherCrew or (not df) or (not ls) or df.Officer.Value ~= 0 or ls.Wanted.Value <= 0 then
 				table.remove(targets,i)
-			else
-				print(ls:FindFirstChild("Wanted").Value)
 			end
 		end
 
