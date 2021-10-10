@@ -1188,7 +1188,8 @@ do
 					if otherChar then
 						if weapon.Name == "Combat" and now-lastCollectAttempt >= 10 then
 							lastCollectAttempt = now
-							print("collecting knife")
+							HB:Wait()
+							log("Collecting knife")
 							collect("Knife")
 							HB:Wait()
 						end
@@ -2879,7 +2880,7 @@ do
 		for i,j in ipairs(order) do
 			local v = TeleportLocations[j]
 			Teleports:addButton(j,function()
-				tp(v)
+				tp(v,false,true)
 			end)
 		end
 	end
