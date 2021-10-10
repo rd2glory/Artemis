@@ -1148,7 +1148,6 @@ do
 				end)
 				savedPos = nil
 				if killPlayer and stomp and not (arrest and killAllHook) then
-					print("planning to re-assign")
 					event = killPlayer.CharacterRemoving:Connect(function()
 						if not loopKill then
 							killPlayer = nil
@@ -1498,10 +1497,19 @@ do
 					pcall(function()
 						killAllPlayerHook:Disconnect()
 					end)
-					local index = math.random(1,#targets)
-					target = targets[index]
-					table.remove(targets,index)
-					if target and target.Character then
+					local highestIndex = 0
+					local highestBounty = 0
+					for i,v in pairs(targets) do
+						local bounty = v.leaderstats.Wanted.Value
+
+						if bounty >= highestBounty then
+							highestIndex = i
+							highestBounty = bounty
+						end
+					end
+					target = targets[highestIndex]
+					table.remove(targets,highestIndex)
+					if target and target.Character and target.leaderstats.Wanted.Value > 0 then
 						killAllPlayerHook = target.CharacterRemoving:Connect(function()
 							arrestPause = os.clock()
 							target = nil
@@ -3007,7 +3015,6 @@ do -- Aimlock
 						local humanoid = them:FindFirstChildOfClass("Humanoid")
 						local goal = root.CFrame + (humanoid.MoveDirection*guess) + (root.Velocity/50)*guess
 
-						local zoom = (Camera.CFrame.Position-Camera.Focus.Position).Magnitude
 						local point,onScreen = Camera:WorldToScreenPoint(goal.Position)
 
 						if UIS.MouseBehavior ~= Enum.MouseBehavior.LockCurrentPosition then
