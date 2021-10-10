@@ -15,8 +15,8 @@ The best Da Hood script there is.
 ]]--
 
 -- Identifier Configurations
-local VERSION = "12"
-local BETA = true
+local VERSION = "2"
+local BETA = false
 
 -- Actual Code
 if not game:IsLoaded() then
@@ -1188,7 +1188,9 @@ do
 					if otherChar then
 						if weapon.Name == "Combat" and now-lastCollectAttempt >= 10 then
 							lastCollectAttempt = now
+							print("collecting knife")
 							collect("Knife")
+							HB:Wait()
 						end
 
 						Camera.CameraSubject = otherChar:FindFirstChildOfClass("Humanoid")
@@ -1199,7 +1201,7 @@ do
 						local goal = otherChar.PrimaryPart.CFrame
 						local goal2 = otherChar.Head.CFrame
 						
-						tp(goal*CFrame.new(0,-15,0))
+						tp(CFrame.new(goal.Position)*CFrame.new(0,-15,0))
 
 						weapon.Parent = char
 						weapon:Activate()
